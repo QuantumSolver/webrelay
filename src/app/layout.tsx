@@ -14,24 +14,24 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Z.ai Code Scaffold - AI-Powered Development",
-  description: "Modern Next.js scaffold optimized for AI-powered development with Z.ai. Built with TypeScript, Tailwind CSS, and shadcn/ui.",
-  keywords: ["Z.ai", "Next.js", "TypeScript", "Tailwind CSS", "shadcn/ui", "AI development", "React"],
-  authors: [{ name: "Z.ai Team" }],
+  title: "EXN Web Relay - Webhook Relay Service",
+  description: "Modern webhook relay service with real-time monitoring, endpoint management, and secure forwarding. Built with Next.js, TypeScript, and Redis.",
+  keywords: ["EXN", "Web Relay", "Webhook", "Next.js", "TypeScript", "Redis", "Real-time", "API", "Webhook forwarding"],
+  authors: [{ name: "Marcques", email: "marcques@exn1.uk" }],
   icons: {
-    icon: "https://z-cdn.chatglm.cn/z-ai/static/logo.svg",
+    icon: "/logo.png",
   },
   openGraph: {
-    title: "Z.ai Code Scaffold",
-    description: "AI-powered development with modern React stack",
-    url: "https://chat.z.ai",
-    siteName: "Z.ai",
+    title: "EXN Web Relay",
+    description: "Webhook relay service with real-time monitoring and secure forwarding",
+    url: "https://relay.exn1.uk",
+    siteName: "EXN Web Relay",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Z.ai Code Scaffold",
-    description: "AI-powered development with modern React stack",
+    title: "EXN Web Relay",
+    description: "Webhook relay service with real-time monitoring and secure forwarding",
   },
 };
 

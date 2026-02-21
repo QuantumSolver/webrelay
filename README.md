@@ -1,8 +1,8 @@
-# ⚡ WebRelay
+# ⚡ EXN Web Relay
 
 A modern webhook relay system with Redis Streams for distributing webhooks across multiple internal services. Features a beautiful admin dashboard, real-time updates, and enterprise-grade reliability.
 
-![WebRelay Dashboard](https://via.placeholder.com/800x400?text=WebRelay+Dashboard)
+![EXN Web Relay Dashboard](https://via.placeholder.com/800x400?text=EXN+Web+Relay+Dashboard)
 
 ## ✨ Features
 
@@ -247,4 +247,4 @@ Built with:
 
 ---
 
-Made with ❤️ by [QuantumSolver](https://github.com/QuantumSolver)
+Made with ❤️ by [Marcques](mailto:marcques@exn1.uk) | [EXN](https://relay.exn1.uk)

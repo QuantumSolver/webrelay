@@ -1,6 +1,9 @@
 {
-  "name": "nextjs_tailwind_shadcn_ts",
-  "version": "0.2.0",
+  "name": "exn-web-relay",
+  "version": "1.0.0",
+  "description": "EXN Web Relay - Webhook relay service with real-time monitoring",
+  "author": "Marcques <marcques@exn1.uk>",
+  "homepage": "https://relay.exn1.uk",
   "private": true,
   "scripts": {
     "dev": "next dev -p 3000 2>&1 | tee dev.log",

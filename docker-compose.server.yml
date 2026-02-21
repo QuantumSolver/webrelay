@@ -2,10 +2,17 @@
 # Docker Compose - Public Server Deployment
 # ===========================================
 # Deploy this on your PUBLIC server
-# Includes: Relay Server + Realtime Service
+# Includes: Relay Server + Realtime Service + Redis
 #
 # Usage:
 #   docker compose up -d
+#
+# Network Configuration:
+# - webrelay-network: Internal network for all services (not exposed)
+# - nginx-proxy-manager: External network for nginx proxy manager (exposes services)
+#
+# Note: Ensure nginx-proxy-manager network exists or update the network name below
+# to match your nginx proxy manager's network name.
 
 services:
   # Relay Server - Public facing Next.js app
@@ -15,20 +22,18 @@ services:
     restart: unless-stopped
     ports:
       - "3000:3000"
+    env_file:
+      - .env
     environment:
-      - REDIS_URL=${REDIS_URL}
-      - REDIS_PASSWORD=${REDIS_PASSWORD}
-      - REDIS_DB=${REDIS_DB:-0}
-      - STREAM_NAME=${STREAM_NAME:-webhook-stream}
-      - CONSUMER_GROUP=${CONSUMER_GROUP:-relay-group}
-      - DEAD_LETTER_QUEUE=${DEAD_LETTER_QUEUE:-webhook-dlq}
-      - ADMIN_PASSWORD=${ADMIN_PASSWORD}
+      - REDIS_URL=redis:6379
     volumes:
       - webrelay-data:/app/db
     depends_on:
+      - redis
       - realtime-service
     networks:
       - webrelay-network
+      - nginx-proxy-manager
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
       interval: 30s
@@ -43,19 +48,49 @@ services:
     restart: unless-stopped
     ports:
       - "3004:3004"
+    env_file:
+      - .env
     environment:
-      - REDIS_URL=${REDIS_URL}
-      - REDIS_PASSWORD=${REDIS_PASSWORD}
-      - REDIS_DB=${REDIS_DB:-0}
-      - STREAM_NAME=${STREAM_NAME:-webhook-stream}
-      - DEAD_LETTER_QUEUE=${DEAD_LETTER_QUEUE:-webhook-dlq}
-      - PORT=3004
+      - REDIS_URL=redis:6379
+    depends_on:
+      - redis
     networks:
       - webrelay-network
+      - nginx-proxy-manager
+
+  # Redis - Internal only, not exposed
+  redis:
+    image: redis:7-alpine
+    container_name: webrelay-redis
+    restart: unless-stopped
+    command: >
+      redis-server
+      --requirepass ${REDIS_PASSWORD}
+      --appendonly yes
+      --maxmemory 256mb
+      --maxmemory-policy allkeys-lru
+      --save 900 1
+      --save 300 10
+      --save 60 10000
+    volumes:
+      - webrelay-redis-data:/data
+    networks:
+      - webrelay-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "--raw", "incr", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
 
 volumes:
   webrelay-data:
+  webrelay-redis-data:
 
 networks:
   webrelay-network:
     driver: bridge
+    internal: true
+  nginx-proxy-manager:
+    external: true
+    name: nginx-proxy-manager

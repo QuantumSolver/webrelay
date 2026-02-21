@@ -1,11 +1,18 @@
 # ===========================================
-# Docker Compose - Development/Testing
+# Docker Compose - Production Deployment
 # ===========================================
-# Full stack deployment for development/testing
+# Full stack deployment for production
 # Includes: Relay Server + Realtime Service + Relay Client + Redis
 #
 # Usage:
 #   docker compose -f docker-compose.full.yml up -d
+#
+# Network Configuration:
+# - relay-network: Internal network for all services (not exposed)
+# - dockernet: External network for nginx proxy manager (exposes services)
+#
+# Note: Ensure dockernet network exists or update the network name below
+# to match your nginx proxy manager's network name.
 
 services:
   # Relay Server - Public facing Next.js app
@@ -15,17 +22,10 @@ services:
       dockerfile: Dockerfile
     container_name: relay-server
     restart: unless-stopped
-    ports:
-      - "3000:3000"
+    env_file:
+      - .env
     environment:
       - REDIS_URL=redis:6379
-      - REDIS_PASSWORD=
-      - REDIS_DB=0
-      - STREAM_NAME=webhook-stream
-      - CONSUMER_GROUP=relay-group
-      - DEAD_LETTER_QUEUE=webhook-dlq
-      - REALTIME_URL=http://realtime-service:3004
-      - ADMIN_PASSWORD=admin
     volumes:
       - relay-data:/app/db
     depends_on:
@@ -33,6 +33,7 @@ services:
       - realtime-service
     networks:
       - relay-network
+      - dockernet
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
       interval: 30s
@@ -47,19 +48,15 @@ services:
       dockerfile: Dockerfile
     container_name: realtime-service
     restart: unless-stopped
-    ports:
-      - "3004:3004"
+    env_file:
+      - .env
     environment:
       - REDIS_URL=redis:6379
-      - REDIS_PASSWORD=
-      - REDIS_DB=0
-      - STREAM_NAME=webhook-stream
-      - DEAD_LETTER_QUEUE=webhook-dlq
-      - PORT=3004
     depends_on:
       - redis
     networks:
       - relay-network
+      - dockernet
 
   # Relay Client - Consumes from Redis
   relay-client:
@@ -68,38 +65,39 @@ services:
       dockerfile: Dockerfile
     container_name: relay-client
     restart: unless-stopped
-    ports:
-      - "3003:3003"
+    env_file:
+      - .env
     environment:
       - REDIS_URL=redis:6379
-      - REDIS_PASSWORD=
-      - REDIS_DB=0
-      - STREAM_NAME=webhook-stream
-      - CONSUMER_GROUP=relay-group
-      - DEAD_LETTER_QUEUE=webhook-dlq
-      - CONSUMER_NAME=relay-client-docker
-      - REALTIME_URL=http://realtime-service:3004
-      - CLIENT_PORT=3003
-      - WORKER_COUNT=5
     depends_on:
       - redis
     networks:
       - relay-network
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
 
-  # Redis
+  # Redis - Internal only, not exposed
   redis:
     image: redis:7-alpine
     container_name: relay-redis
     restart: unless-stopped
-    ports:
-      - "6379:6379"
+    command: >
+      redis-server
+      --requirepass ${REDIS_PASSWORD}
+      --appendonly yes
+      --maxmemory 256mb
+      --maxmemory-policy allkeys-lru
+      --save 900 1
+      --save 300 10
+      --save 60 10000
     volumes:
       - redis-data:/data
-    command: redis-server --appendonly yes
     networks:
       - relay-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "--raw", "incr", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
 
 volumes:
   relay-data:
@@ -108,3 +106,5 @@ volumes:
 networks:
   relay-network:
     driver: bridge
+  dockernet:
+    external: true

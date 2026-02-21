@@ -1,10 +1,10 @@
-# Getting Started with WebRelay
+# Getting Started with EXN Web Relay
 
-Welcome to WebRelay! This guide will help you get up and running quickly.
+Welcome to EXN Web Relay! This guide will help you get up and running quickly.
 
-## What is WebRelay?
+## What is EXN Web Relay?
 
-WebRelay is a webhook relay system that allows you to:
+EXN Web Relay is a webhook relay system that allows you to:
 - Receive webhooks on a public server
 - Forward them to internal/private services
 - Monitor and manage everything through a beautiful dashboard
