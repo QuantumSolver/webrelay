@@ -1,0 +1,14 @@
+#!/bin/sh
+set -e
+
+# Check if database exists, if not initialize it
+if [ ! -f "/app/db/prisma.db" ]; then
+    echo "📦 Database not found. Initializing Prisma database..."
+    bun run db:push
+    echo "✅ Database initialized successfully!"
+else
+    echo "✅ Database already exists. Skipping initialization."
+fi
+
+# Start the application
+exec "$@"
