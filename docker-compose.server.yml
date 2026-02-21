@@ -1,0 +1,61 @@
+# ===========================================
+# Docker Compose - Public Server Deployment
+# ===========================================
+# Deploy this on your PUBLIC server
+# Includes: Relay Server + Realtime Service
+#
+# Usage:
+#   docker compose up -d
+
+services:
+  # Relay Server - Public facing Next.js app
+  relay-server:
+    image: ghcr.io/quantumsolver/webrelay-server:latest
+    container_name: webrelay-server
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - REDIS_URL=${REDIS_URL}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - REDIS_DB=${REDIS_DB:-0}
+      - STREAM_NAME=${STREAM_NAME:-webhook-stream}
+      - CONSUMER_GROUP=${CONSUMER_GROUP:-relay-group}
+      - DEAD_LETTER_QUEUE=${DEAD_LETTER_QUEUE:-webhook-dlq}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD}
+    volumes:
+      - webrelay-data:/app/db
+    depends_on:
+      - realtime-service
+    networks:
+      - webrelay-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # Realtime Service - WebSocket for dashboard updates
+  realtime-service:
+    image: ghcr.io/quantumsolver/webrelay-realtime:latest
+    container_name: webrelay-realtime
+    restart: unless-stopped
+    ports:
+      - "3004:3004"
+    environment:
+      - REDIS_URL=${REDIS_URL}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - REDIS_DB=${REDIS_DB:-0}
+      - STREAM_NAME=${STREAM_NAME:-webhook-stream}
+      - DEAD_LETTER_QUEUE=${DEAD_LETTER_QUEUE:-webhook-dlq}
+      - PORT=3004
+    networks:
+      - webrelay-network
+
+volumes:
+  webrelay-data:
+
+networks:
+  webrelay-network:
+    driver: bridge

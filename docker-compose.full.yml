@@ -1,0 +1,110 @@
+# ===========================================
+# Docker Compose - Development/Testing
+# ===========================================
+# Full stack deployment for development/testing
+# Includes: Relay Server + Realtime Service + Relay Client + Redis
+#
+# Usage:
+#   docker compose -f docker-compose.full.yml up -d
+
+services:
+  # Relay Server - Public facing Next.js app
+  relay-server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: relay-server
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - REDIS_URL=redis:6379
+      - REDIS_PASSWORD=
+      - REDIS_DB=0
+      - STREAM_NAME=webhook-stream
+      - CONSUMER_GROUP=relay-group
+      - DEAD_LETTER_QUEUE=webhook-dlq
+      - REALTIME_URL=http://realtime-service:3004
+      - ADMIN_PASSWORD=admin
+    volumes:
+      - relay-data:/app/db
+    depends_on:
+      - redis
+      - realtime-service
+    networks:
+      - relay-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # Realtime Service - WebSocket for dashboard updates
+  realtime-service:
+    build:
+      context: ./mini-services/realtime-service
+      dockerfile: Dockerfile
+    container_name: realtime-service
+    restart: unless-stopped
+    ports:
+      - "3004:3004"
+    environment:
+      - REDIS_URL=redis:6379
+      - REDIS_PASSWORD=
+      - REDIS_DB=0
+      - STREAM_NAME=webhook-stream
+      - DEAD_LETTER_QUEUE=webhook-dlq
+      - PORT=3004
+    depends_on:
+      - redis
+    networks:
+      - relay-network
+
+  # Relay Client - Consumes from Redis
+  relay-client:
+    build:
+      context: ./mini-services/relay-client
+      dockerfile: Dockerfile
+    container_name: relay-client
+    restart: unless-stopped
+    ports:
+      - "3003:3003"
+    environment:
+      - REDIS_URL=redis:6379
+      - REDIS_PASSWORD=
+      - REDIS_DB=0
+      - STREAM_NAME=webhook-stream
+      - CONSUMER_GROUP=relay-group
+      - DEAD_LETTER_QUEUE=webhook-dlq
+      - CONSUMER_NAME=relay-client-docker
+      - REALTIME_URL=http://realtime-service:3004
+      - CLIENT_PORT=3003
+      - WORKER_COUNT=5
+    depends_on:
+      - redis
+    networks:
+      - relay-network
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  # Redis
+  redis:
+    image: redis:7-alpine
+    container_name: relay-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    command: redis-server --appendonly yes
+    networks:
+      - relay-network
+
+volumes:
+  relay-data:
+  redis-data:
+
+networks:
+  relay-network:
+    driver: bridge

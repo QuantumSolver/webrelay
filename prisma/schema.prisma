@@ -1,0 +1,54 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String     @id @default(cuid())
+  username     String     @unique
+  password     String
+  role         String     @default("admin") // "admin"
+  lastLogin    DateTime?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+}
+
+model ApiKey {
+  id          String    @id @default(cuid())
+  name        String
+  key         String    @unique
+  platform    String?   // "meta", "slack", "custom"
+  permissions String    @default("read") // JSON array
+  rateLimit   Int       @default(60) // requests per minute
+  isActive    Boolean   @default(true)
+  expiresAt   DateTime?
+  lastUsedAt  DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  endpointId  String?   // Link to specific endpoint
+}
+
+model WebhookLog {
+  id           String    @id @default(cuid())
+  webhookId    String    @unique
+  endpointId   String
+  method       String
+  headers      String    // JSON
+  body         String    // Base64 encoded
+  query        String?   // JSON
+  sourceIp     String?
+  userAgent    String?
+  status       String    @default("pending") // "pending", "forwarded", "failed", "dlq"
+  attempts     Int       @default(0)
+  lastError    String?
+  forwardedAt  DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+}
