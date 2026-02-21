@@ -5,18 +5,18 @@
 # Public-facing service that receives webhooks
 
 # Stage 1: Dependencies
-FROM oven/bun:1 AS deps
+FROM node:20-alpine AS deps
 WORKDIR /app
 
 # Copy package files
-COPY package.json bun.lock ./
+COPY package.json package-lock.json* ./
 COPY prisma ./prisma/
 
 # Install dependencies
-RUN bun install --frozen-lockfile
+RUN npm ci
 
 # Stage 2: Builder
-FROM oven/bun:1 AS builder
+FROM node:20-alpine AS builder
 WORKDIR /app
 
 # Copy dependencies
@@ -24,29 +24,29 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
 # Generate Prisma client
-RUN bun run db:generate
+RUN npx prisma generate
 
 # Build Next.js
 ENV NEXT_TELEMETRY_DISABLED=1
-RUN bun run build
+RUN npm run build
 
 # Stage 3: Runner
-FROM oven/bun:1-slim AS runner
+FROM node:20-alpine AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
 # Create non-root user
-RUN groupadd --system --gid 1001 nodejs
-RUN useradd --system --uid 1001 --gid nodejs nextjs
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 --gid nodejs nextjs
 
 # Copy package files
 COPY --from=builder /app/package.json ./package.json
-COPY --from=builder /app/bun.lock ./bun.lock
+COPY --from=builder /app/package-lock.json* ./package-lock.json
 
 # Install all dependencies (including dev for Prisma CLI)
-RUN bun install --frozen-lockfile
+RUN npm ci
 
 # Copy built files
 COPY --from=builder /app/public ./public
@@ -76,4 +76,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:3000/api/health || exit 1
 
 ENTRYPOINT ["docker-entrypoint.sh"]
-CMD ["bun", "server.js"]
+CMD ["node", "server.js"]
