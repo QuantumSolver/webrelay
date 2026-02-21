@@ -20,6 +20,8 @@ export const metadata: Metadata = {
   authors: [{ name: "Marcques", email: "marcques@exn1.uk" }],
   icons: {
     icon: "/logo.png",
+    shortcut: "/logo.png",
+    apple: "/logo.png",
   },
   openGraph: {
     title: "EXN Web Relay",
@@ -27,11 +29,20 @@ export const metadata: Metadata = {
     url: "https://relay.exn1.uk",
     siteName: "EXN Web Relay",
     type: "website",
+    images: [
+      {
+        url: "/logo.png",
+        width: 1200,
+        height: 630,
+        alt: "EXN Web Relay",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: "EXN Web Relay",
     description: "Webhook relay service with real-time monitoring and secure forwarding",
+    images: ["/logo.png"],
   },
 };
 
