@@ -441,7 +441,7 @@ export default function Dashboard() {
       fetchDLQ();
       
       // Connect to realtime service via WebSocket
-      const realtimeUrl = `http://localhost:3004`;
+      const realtimeUrl = process.env.NEXT_PUBLIC_REALTIME_URL || 'http://localhost:3004';
       socketRef.current = io(realtimeUrl, {
         transports: ['websocket'],
         reconnection: true,
