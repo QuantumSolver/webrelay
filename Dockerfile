@@ -9,11 +9,11 @@ FROM node:20-alpine AS deps
 WORKDIR /app
 
 # Copy package files
-COPY package.json package-lock.json* ./
+COPY package.json ./
 COPY prisma ./prisma/
 
 # Install dependencies
-RUN npm ci
+RUN npm install
 
 # Stage 2: Builder
 FROM node:20-alpine AS builder
@@ -43,10 +43,9 @@ RUN adduser --system --uid 1001 -G nodejs nextjs
 
 # Copy package files
 COPY --from=builder /app/package.json ./package.json
-COPY --from=builder /app/package-lock.json* ./package-lock.json
 
 # Install all dependencies (including dev for Prisma CLI)
-RUN npm ci
+RUN npm install
 
 # Copy built files
 COPY --from=builder /app/public ./public
