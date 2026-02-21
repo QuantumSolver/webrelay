@@ -18,8 +18,8 @@ RUN bun install --frozen-lockfile --production
 COPY index.ts ./
 
 # Create non-root user
-RUN addgroup --system --gid 1001 realtime && \
-    adduser --system --uid 1001 realtime
+RUN groupadd --system --gid 1001 realtime && \
+    useradd --system --uid 1001 --gid realtime realtime
 
 # Set ownership
 RUN chown -R realtime:realtime /app

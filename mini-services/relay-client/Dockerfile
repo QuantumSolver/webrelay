@@ -18,8 +18,8 @@ RUN bun install --frozen-lockfile --production
 COPY index.ts ./
 
 # Create non-root user
-RUN addgroup --system --gid 1001 relay && \
-    adduser --system --uid 1001 relay
+RUN groupadd --system --gid 1001 relay && \
+    useradd --system --uid 1001 --gid relay relay
 
 # Set ownership
 RUN chown -R relay:relay /app
