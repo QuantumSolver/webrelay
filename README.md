@@ -2,7 +2,7 @@
 
 A modern webhook relay system with Redis Streams for distributing webhooks across multiple internal services. Features a beautiful admin dashboard, real-time updates, and enterprise-grade reliability.
 
-![EXN Web Relay Dashboard](https://via.placeholder.com/800x400?text=EXN+Web+Relay+Dashboard)
+![EXN Web Relay Dashboard](https://placehold.co/800x400?text=EXN+Web+Relay+Dashboard)
 
 ## ✨ Features
 
