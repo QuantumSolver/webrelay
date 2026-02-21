@@ -39,7 +39,7 @@ ENV NEXT_TELEMETRY_DISABLED=1
 
 # Create non-root user
 RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 --gid nodejs nextjs
+RUN adduser --system --uid 1001 -G nodejs nextjs
 
 # Copy package files
 COPY --from=builder /app/package.json ./package.json
