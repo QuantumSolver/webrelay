@@ -441,7 +441,7 @@ export default function Dashboard() {
       fetchDLQ();
       
       // Connect to realtime service via WebSocket
-      const realtimeUrl = process.env.NEXT_PUBLIC_REALTIME_URL || 'http://localhost:3004';
+      const realtimeUrl = 'https://relay.exn1.uk';
       socketRef.current = io(realtimeUrl, {
         transports: ['websocket'],
         reconnection: true,
